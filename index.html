@@ -1,33 +1,244 @@
 <!DOCTYPE html>
 
 <html>
-
     <head>
-        <script src="https://apis.google.com/js/platform.js" async defer></script>
-        <meta name="306312319198-u9h4e07khciuet8hnj00b8fvmq25rlj0.apps.googleusercontent.com">
-
-        <script>
-            function signOut() {
-                var auth2 = gapi.auth2.getAuthInstance();
-                auth2.signOut().then(function () {
-                    console.log('User signed out.');
-                });
-            }
-
-            function onSignIn(googleUser) {
-                var profile = googleUser.getBasicProfile();
-                console.log('ID: ' + profile.getId()); // Do not send to your backend! Use an ID token instead.
-                console.log('Name: ' + profile.getName());
-                console.log('Image URL: ' + profile.getImageUrl());
-                console.log('Email: ' + profile.getEmail()); // This is null if the 'email' scope is not present.
-            }
-        </script>
+        <meta name="viewport" content="width=device-width, initial-scale=1.0" />
     </head>
 
-    <body>
-        <div class="g-signin2" data-onsuccess="onSignIn"></div>
+    <body onload="updateData()">
+        <script src="https://accounts.google.com/gsi/client" async></script>
+        <script>
+            const apiUrl =
+                'https://us-central1-zinovik-project.cloudfunctions.net/storage-json-editor-api';
+            const state = {
+                credential: null,
+                bucketNames: null,
+                currentBucketName: null,
+                fileNames: null,
+                currentFileName: null,
+                file: null,
+            };
 
-        <a href="#" onclick="signOut();">Sign out</a>
+            const setIsLoading = (isLoading) => {
+                document.getElementById('status').innerHTML = isLoading
+                    ? 'Loading...'
+                    : '';
+
+                document.getElementById('bucket-names').disabled = isLoading;
+                document.getElementById('file-names').disabled = isLoading;
+                document.getElementById('file').disabled = isLoading;
+                document.getElementById('is-public').disabled = isLoading;
+                document.getElementById('sort-keys').disabled = isLoading;
+                document.getElementById('save-button').disabled = isLoading;
+            };
+
+            const apiRequest = async (action, payload) => {
+                const response = await fetch(apiUrl, {
+                    method: 'POST',
+                    headers: {
+                        Authorization: state.credential,
+                        'Content-Type': 'application/json',
+                    },
+                    body: JSON.stringify({
+                        action,
+                        payload,
+                    }),
+                });
+
+                return await response.json();
+            };
+
+            const updateSelect = (id, elements, current) => {
+                const selectElement = document.getElementById(id);
+
+                for (let i = selectElement.options.length - 1; i >= 0; i--)
+                    selectElement.remove(i);
+
+                elements.forEach((element) => {
+                    const option = document.createElement('option');
+                    option.value = element;
+                    option.innerHTML = element;
+                    option.selected = element === current;
+                    selectElement.appendChild(option);
+                });
+            };
+
+            const updateData = () => {
+                updateSelect(
+                    'bucket-names',
+                    state.bucketNames ?? [],
+                    state.currentBucketName
+                );
+                updateSelect(
+                    'file-names',
+                    state.fileNames ?? [],
+                    state.currentFileName
+                );
+                document.getElementById('file').value = state.file ?? '';
+            };
+
+            const stringify = (file) => JSON.stringify(file, null, 4);
+
+            async function handleCredentialResponse(googleUser) {
+                state.credential = googleUser.credential;
+
+                setIsLoading(true);
+
+                const getBucketNamesResponse = await apiRequest(
+                    'GET_BUCKET_NAMES'
+                );
+
+                setIsLoading(false);
+
+                state.bucketNames = getBucketNamesResponse.bucketNames;
+                state.fileNames = getBucketNamesResponse.fileNames;
+                state.file = stringify(getBucketNamesResponse.file);
+                state.currentBucketName = state.bucketNames[0];
+                state.currentFileName = state.fileNames[0];
+
+                updateData();
+            }
+
+            const handleBucketNameChange = async (bucketName) => {
+                if (bucketName === state.currentBucketName) return;
+
+                state.currentBucketName = bucketName;
+                state.fileNames = null;
+                state.file = null;
+
+                updateData();
+
+                setIsLoading(true);
+
+                const getFileNamesResponse = await apiRequest(
+                    'GET_FILE_NAMES',
+                    { bucketName: state.currentBucketName }
+                );
+
+                setIsLoading(false);
+
+                state.fileNames = getFileNamesResponse.fileNames;
+                state.file = stringify(getFileNamesResponse.file);
+                state.currentFileName = state.fileNames[0];
+
+                updateData();
+            };
+
+            const handleFileNameChange = async (fileName) => {
+                if (fileName === state.currentFileName) return;
+
+                state.currentFileName = fileName;
+                state.file = null;
+
+                updateData();
+
+                setIsLoading(true);
+
+                const getFileNamesResponse = await apiRequest('GET_FILE', {
+                    bucketName: state.currentBucketName,
+                    fileName: state.currentFileName,
+                });
+
+                setIsLoading(false);
+
+                state.file = stringify(getFileNamesResponse.file);
+
+                updateData();
+            };
+
+            const handleFileChange = (value) => {
+                state.file = value;
+            };
+
+            const sortKeys = () => {
+                const jsonObject = JSON.parse(state.file);
+
+                const jsonObjectSorted = Object.keys(jsonObject)
+                    .sort((key1, key2) => key1.localeCompare(key2))
+                    .reduce(
+                        (acc, key) => ({
+                            ...acc,
+                            [key]: jsonObject[key],
+                        }),
+                        {}
+                    );
+
+                state.file = stringify(jsonObjectSorted);
+                updateData();
+            };
+
+            const saveFile = async () => {
+                document.getElementById('save-button').innerHTML = 'Saving...';
+
+                setIsLoading(true);
+
+                const getBucketNamesResponse = await apiRequest('SAVE_FILE', {
+                    bucketName: state.currentBucketName,
+                    fileName: state.currentFileName,
+                    file: JSON.parse(state.file),
+                    isPublic: document.getElementById('is-public').checked,
+                });
+
+                setIsLoading(false);
+
+                document.getElementById('save-button').innerHTML = 'Save';
+            };
+        </script>
+
+        <div
+            id="g_id_onload"
+            data-client_id="306312319198-u9h4e07khciuet8hnj00b8fvmq25rlj0.apps.googleusercontent.com"
+            data-context="use"
+            data-callback="handleCredentialResponse"
+            data-close_on_tap_outside="false"
+            data-itp_support="true"
+        ></div>
+
+        <div id="status"></div>
+        <div>
+            <label for="bucket-names">Buckets:</label>
+        </div>
+        <div>
+            <select
+                name="bucket-names"
+                id="bucket-names"
+                size="4"
+                onChange="handleBucketNameChange(this.options[this.selectedIndex].value)"
+                style="width: 250px"
+            ></select>
+        </div>
+
+        <div>
+            <label for="file-names">Files:</label>
+        </div>
+        <div>
+            <select
+                name="file-names"
+                id="file-names"
+                size="4"
+                onChange="handleFileNameChange(this.options[this.selectedIndex].value)"
+                style="width: 250px"
+            ></select>
+        </div>
+
+        <div><label for="file">File:</label></div>
+        <div>
+            <textarea
+                name="file"
+                id="file"
+                onChange="handleFileChange(this.value)"
+                cols="40"
+                rows="6"
+            ></textarea>
+        </div>
+
+        <div>
+            <input type="checkbox" id="is-public" name="is-public" />
+            <label for="is-public"> Public</label><br />
+        </div>
+        <div>
+            <button onClick="sortKeys()" id="sort-keys">Sort Keys</button>
+            <button onClick="saveFile()" id="save-button">Save</button>
+        </div>
     </body>
-
 </html>
