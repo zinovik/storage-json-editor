@@ -168,6 +168,8 @@
             };
 
             const saveFile = async () => {
+                updateData();
+
                 document.getElementById('save-button').innerHTML = 'Saving...';
 
                 setIsLoading(true);
