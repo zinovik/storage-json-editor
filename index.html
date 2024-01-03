@@ -34,13 +34,18 @@
 
             const apiRequest = async (path, payload, method = 'GET') => {
                 const response = await fetch(
-                    `${apiUrl}/${path}?${new URLSearchParams(payload)}`,
+                    `${apiUrl}/${path}${
+                        methods === 'GET'
+                            ? `?${new URLSearchParams(payload)}`
+                            : ''
+                    }`,
                     {
                         method,
                         headers: {
                             Authorization: state.credential,
                             'Content-Type': 'application/json',
                         },
+                        ...(method === 'POST' ? payload : {}),
                     }
                 );
 
