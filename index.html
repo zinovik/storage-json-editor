@@ -35,7 +35,7 @@
             const apiRequest = async (path, payload, method = 'GET') => {
                 const response = await fetch(
                     `${apiUrl}/${path}${
-                        methods === 'GET'
+                        method === 'GET'
                             ? `?${new URLSearchParams(payload)}`
                             : ''
                     }`,
