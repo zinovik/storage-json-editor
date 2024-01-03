@@ -45,7 +45,9 @@
                             Authorization: state.credential,
                             'Content-Type': 'application/json',
                         },
-                        ...(method === 'POST' ? { body: payload } : {}),
+                        ...(method === 'POST'
+                            ? { body: JSON.stringify(payload) }
+                            : {}),
                     }
                 );
 
