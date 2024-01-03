@@ -32,17 +32,14 @@
                 document.getElementById('save-button').disabled = isLoading;
             };
 
-            const apiRequest = async (action, payload) => {
-                const response = await fetch(apiUrl, {
-                    method: 'POST',
+            const apiRequest = async (path, payload, method = 'GET') => {
+                const response = await fetch(`${apiUrl}/${path}`, {
+                    method,
                     headers: {
                         Authorization: state.credential,
                         'Content-Type': 'application/json',
                     },
-                    body: JSON.stringify({
-                        action,
-                        payload,
-                    }),
+                    query: payload,
                 });
 
                 return await response.json();
@@ -85,7 +82,7 @@
                 setIsLoading(true);
 
                 const getBucketNamesResponse = await apiRequest(
-                    'GET_BUCKET_NAMES'
+                    'get-bucket-names'
                 );
 
                 setIsLoading(false);
@@ -111,7 +108,7 @@
                 setIsLoading(true);
 
                 const getFileNamesResponse = await apiRequest(
-                    'GET_FILE_NAMES',
+                    'get-file-names',
                     { bucketName: state.currentBucketName }
                 );
 
@@ -134,7 +131,7 @@
 
                 setIsLoading(true);
 
-                const getFileNamesResponse = await apiRequest('GET_FILE', {
+                const getFileNamesResponse = await apiRequest('get-file', {
                     bucketName: state.currentBucketName,
                     fileName: state.currentFileName,
                 });
@@ -172,12 +169,16 @@
 
                 setIsLoading(true);
 
-                const getBucketNamesResponse = await apiRequest('SAVE_FILE', {
-                    bucketName: state.currentBucketName,
-                    fileName: state.currentFileName,
-                    file: JSON.parse(state.file),
-                    isPublic: document.getElementById('is-public').checked,
-                });
+                const getBucketNamesResponse = await apiRequest(
+                    'save-file',
+                    {
+                        bucketName: state.currentBucketName,
+                        fileName: state.currentFileName,
+                        file: JSON.parse(state.file),
+                        isPublic: document.getElementById('is-public').checked,
+                    },
+                    'POST'
+                );
 
                 setIsLoading(false);
 
