@@ -32,24 +32,29 @@
                 document.getElementById('save-button').disabled = isLoading;
             };
 
-            const apiRequest = async (action, payload) => {
+            const getFileRequest = async (query) => {
                 const response = await fetch(
-                    `${API_URL}${
-                        action === 'get'
-                            ? `?${new URLSearchParams(payload)}`
-                            : ''
-                    }`,
+                    `${API_URL}?${new URLSearchParams(query)}`,
                     {
-                        method: action === 'get' ? 'GET' : 'SAVE',
+                        method: 'GET',
                         headers: {
                             Authorization: state.credential,
-                            'Content-Type': 'application/json',
                         },
-                        ...(action === 'get'
-                            ? {}
-                            : { body: JSON.stringify(payload) }),
                     }
                 );
+
+                return await response.json();
+            };
+
+            const saveFileRequest = async (body) => {
+                const response = await fetch(API_URL, {
+                    method: 'POST',
+                    headers: {
+                        Authorization: state.credential,
+                        'Content-Type': 'application/json',
+                    },
+                    body: JSON.stringify(body),
+                });
 
                 return await response.json();
             };
@@ -90,7 +95,7 @@
 
                 setIsLoading(true);
 
-                const getBucketNamesResponse = await apiRequest('get');
+                const getBucketNamesResponse = await getFileRequest();
 
                 setIsLoading(false);
 
@@ -114,8 +119,8 @@
 
                 setIsLoading(true);
 
-                const getFileNamesResponse = await apiRequest('get', {
-                    bucketName: state.currentBucketName,
+                const getFileNamesResponse = await getFileRequest({
+                    'bucket-name': state.currentBucketName,
                 });
 
                 setIsLoading(false);
@@ -137,9 +142,9 @@
 
                 setIsLoading(true);
 
-                const getFileNamesResponse = await apiRequest('get', {
-                    bucketName: state.currentBucketName,
-                    fileName: state.currentFileName,
+                const getFileNamesResponse = await getFileRequest({
+                    'bucket-name': state.currentBucketName,
+                    'file-name': state.currentFileName,
                 });
 
                 setIsLoading(false);
@@ -175,7 +180,7 @@
 
                 setIsLoading(true);
 
-                const getBucketNamesResponse = await apiRequest('save', {
+                const getBucketNamesResponse = await saveFileRequest({
                     bucketName: state.currentBucketName,
                     fileName: state.currentFileName,
                     file: JSON.parse(state.file),
