@@ -8,8 +8,8 @@
     <body onload="updateData()">
         <script src="https://accounts.google.com/gsi/client" async></script>
         <script>
-            const apiUrl =
-                'https://storage-json-editor-api-wniawguk3a-uc.a.run.app';
+            const API_URL =
+                'https://storage-json-editor-api-wniawguk3a-uc.a.run.app/file';
             const state = {
                 credential: null,
                 bucketNames: null,
@@ -32,22 +32,22 @@
                 document.getElementById('save-button').disabled = isLoading;
             };
 
-            const apiRequest = async (path, payload, method = 'GET') => {
+            const apiRequest = async (action, payload) => {
                 const response = await fetch(
-                    `${apiUrl}/${path}${
-                        method === 'GET'
+                    `${API_URL}${
+                        action === 'get'
                             ? `?${new URLSearchParams(payload)}`
                             : ''
                     }`,
                     {
-                        method,
+                        method: action === 'get' ? 'GET' : 'SAVE',
                         headers: {
                             Authorization: state.credential,
                             'Content-Type': 'application/json',
                         },
-                        ...(method === 'POST'
-                            ? { body: JSON.stringify(payload) }
-                            : {}),
+                        ...(action === 'get'
+                            ? {}
+                            : { body: JSON.stringify(payload) }),
                     }
                 );
 
@@ -90,9 +90,7 @@
 
                 setIsLoading(true);
 
-                const getBucketNamesResponse = await apiRequest(
-                    'get-bucket-names'
-                );
+                const getBucketNamesResponse = await apiRequest('get');
 
                 setIsLoading(false);
 
@@ -116,10 +114,9 @@
 
                 setIsLoading(true);
 
-                const getFileNamesResponse = await apiRequest(
-                    'get-file-names',
-                    { bucketName: state.currentBucketName }
-                );
+                const getFileNamesResponse = await apiRequest('get', {
+                    bucketName: state.currentBucketName,
+                });
 
                 setIsLoading(false);
 
@@ -140,7 +137,7 @@
 
                 setIsLoading(true);
 
-                const getFileNamesResponse = await apiRequest('get-file', {
+                const getFileNamesResponse = await apiRequest('get', {
                     bucketName: state.currentBucketName,
                     fileName: state.currentFileName,
                 });
@@ -178,16 +175,12 @@
 
                 setIsLoading(true);
 
-                const getBucketNamesResponse = await apiRequest(
-                    'save-file',
-                    {
-                        bucketName: state.currentBucketName,
-                        fileName: state.currentFileName,
-                        file: JSON.parse(state.file),
-                        isPublic: document.getElementById('is-public').checked,
-                    },
-                    'POST'
-                );
+                const getBucketNamesResponse = await apiRequest('save', {
+                    bucketName: state.currentBucketName,
+                    fileName: state.currentFileName,
+                    file: JSON.parse(state.file),
+                    isPublic: document.getElementById('is-public').checked,
+                });
 
                 setIsLoading(false);
 
