@@ -9,9 +9,9 @@
         <script src="https://accounts.google.com/gsi/client" async></script>
         <script>
             const API_URL =
-                'https://storage-json-editor-api-wniawguk3a-uc.a.run.app/file';
+                'https://storage-json-editor-api-wniawguk3a-uc.a.run.app';
             const state = {
-                credential: null,
+                Authorization: null,
                 bucketNames: null,
                 currentBucketName: null,
                 fileNames: null,
@@ -32,13 +32,26 @@
                 document.getElementById('save-button').disabled = isLoading;
             };
 
+            const signInRequest = async (token) => {
+                const response = await fetch(`${API_URL}/auth/login`, {
+                    method: 'POST',
+                    headers: {
+                        Authorization: state.Authorization,
+                        'Content-Type': 'application/json',
+                    },
+                    body: JSON.stringify({ token }),
+                });
+
+                return await response.json();
+            };
+
             const getFileRequest = async (query) => {
                 const response = await fetch(
-                    `${API_URL}?${new URLSearchParams(query)}`,
+                    `${API_URL}/file?${new URLSearchParams(query)}`,
                     {
                         method: 'GET',
                         headers: {
-                            Authorization: state.credential,
+                            Authorization: state.Authorization,
                         },
                     }
                 );
@@ -47,10 +60,10 @@
             };
 
             const saveFileRequest = async (body) => {
-                const response = await fetch(API_URL, {
+                const response = await fetch(`${API_URL}/file`, {
                     method: 'POST',
                     headers: {
-                        Authorization: state.credential,
+                        Authorization: state.Authorization,
                         'Content-Type': 'application/json',
                     },
                     body: JSON.stringify(body),
@@ -91,10 +104,12 @@
             const stringify = (file) => JSON.stringify(file, null, 4);
 
             async function handleCredentialResponse(googleUser) {
-                state.credential = googleUser.credential;
-
                 setIsLoading(true);
 
+                const { access_token } = await signInRequest(
+                    googleUser.credential
+                );
+                state.Authorization = `Bearer ${access_token}`;
                 const getBucketNamesResponse = await getFileRequest();
 
                 setIsLoading(false);
