@@ -22,7 +22,7 @@
             const setIsLoading = (isLoading) => {
                 document.getElementById('status').innerHTML = isLoading
                     ? 'Loading...'
-                    : '';
+                    : 'Ready';
 
                 document.getElementById('bucket-names').disabled = isLoading;
                 document.getElementById('file-names').disabled = isLoading;
@@ -195,12 +195,16 @@
 
                 setIsLoading(true);
 
-                const getBucketNamesResponse = await saveFileRequest({
-                    bucketName: state.currentBucketName,
-                    fileName: state.currentFileName,
-                    file: JSON.parse(state.file),
-                    isPublic: document.getElementById('is-public').checked,
-                });
+                try {
+                    await saveFileRequest({
+                        bucketName: state.currentBucketName,
+                        fileName: state.currentFileName,
+                        file: JSON.parse(state.file),
+                        isPublic: document.getElementById('is-public').checked,
+                    });
+                } catch (error) {
+                    alert('error saving json!');
+                }
 
                 setIsLoading(false);
 
