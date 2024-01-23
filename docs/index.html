@@ -47,7 +47,7 @@
 
             const getFileRequest = async (query) => {
                 const response = await fetch(
-                    `${API_URL}/file?${new URLSearchParams(query)}`,
+                    `${API_URL}/json?${new URLSearchParams(query)}`,
                     {
                         method: 'GET',
                         headers: {
@@ -60,7 +60,7 @@
             };
 
             const saveFileRequest = async (body) => {
-                const response = await fetch(`${API_URL}/file`, {
+                const response = await fetch(`${API_URL}/json`, {
                     method: 'POST',
                     headers: {
                         Authorization: state.Authorization,
