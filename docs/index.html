@@ -21,13 +21,12 @@
 
             const setIsLoading = (isLoading) => {
                 document.getElementById('status').innerHTML = isLoading
-                    ? 'Loading...'
-                    : 'Ready';
+                    ? 'Status: ⏳ Loading...'
+                    : 'Status: 🟢 Ready';
 
                 document.getElementById('bucket-names').disabled = isLoading;
                 document.getElementById('file-names').disabled = isLoading;
                 document.getElementById('file').disabled = isLoading;
-                document.getElementById('is-public').disabled = isLoading;
                 document.getElementById('sort-keys').disabled = isLoading;
                 document.getElementById('save-button').disabled = isLoading;
             };
@@ -200,7 +199,6 @@
                         bucketName: state.currentBucketName,
                         fileName: state.currentFileName,
                         file: JSON.parse(state.file),
-                        isPublic: document.getElementById('is-public').checked,
                     });
                 } catch (error) {
                     alert('error saving json!');
@@ -221,7 +219,7 @@
             data-itp_support="true"
         ></div>
 
-        <div id="status"></div>
+        <div id="status">Status: 🟢 Ready</div>
         <div>
             <label for="bucket-names">Buckets:</label>
         </div>
@@ -259,10 +257,6 @@
             ></textarea>
         </div>
 
-        <div>
-            <input type="checkbox" id="is-public" name="is-public" />
-            <label for="is-public"> Public</label><br />
-        </div>
         <div>
             <button onClick="sortKeys()" id="sort-keys">Sort Keys</button>
             <button onClick="saveFile()" id="save-button">Save</button>
