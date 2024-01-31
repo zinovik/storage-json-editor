@@ -13,6 +13,7 @@
                     ? 'http://localhost:8080'
                     : 'https://storage-json-editor-api-wniawguk3a-uc.a.run.app';
             const state = {
+                currentUser: null,
                 bucketNames: null,
                 currentBucketName: null,
                 fileNames: null,
@@ -39,6 +40,15 @@
                         'Content-Type': 'application/json',
                     },
                     body: JSON.stringify({ token }),
+                    credentials: 'include',
+                });
+
+                return await response.json();
+            };
+
+            const profileRequest = async () => {
+                const response = await fetch(`${API_URL}/auth/profile`, {
+                    method: 'GET',
                     credentials: 'include',
                 });
 
@@ -97,17 +107,19 @@
                     state.currentFileName
                 );
                 document.getElementById('file').value = state.file ?? '';
+                document.getElementById(
+                    'current-user'
+                ).innerHTML = `Current user: ${
+                    state.currentUser || 'not logged'
+                }`;
             };
 
             const stringify = (file) => JSON.stringify(file, null, 4);
 
-            async function handleCredentialResponse(googleUser) {
-                setIsLoading(true);
-
-                await signInRequest(googleUser.credential);
+            const loadFile = async () => {
                 const getBucketNamesResponse = await getFileRequest();
 
-                setIsLoading(false);
+                if (!getBucketNamesResponse) return;
 
                 state.bucketNames = getBucketNamesResponse.bucketNames;
                 state.fileNames = getBucketNamesResponse.fileNames;
@@ -116,6 +128,21 @@
                 state.currentFileName = state.fileNames[0];
 
                 updateData();
+            };
+
+            async function handleCredentialResponse(googleUser) {
+                setIsLoading(true);
+
+                const signInResponse = await signInRequest(
+                    googleUser.credential
+                );
+
+                state.currentUser = signInResponse.email;
+                updateData();
+
+                await loadFile();
+
+                setIsLoading(false);
             }
 
             const handleBucketNameChange = async (bucketName) => {
@@ -204,6 +231,14 @@
 
                 document.getElementById('save-button').innerHTML = 'Save';
             };
+
+            (async () => {
+                const profileResponse = await profileRequest();
+                if (profileResponse && profileResponse.email) {
+                    state.currentUser = profileResponse.email;
+                    await loadFile();
+                }
+            })();
         </script>
 
         <div
@@ -215,12 +250,13 @@
             data-itp_support="true"
         ></div>
 
-        <button
+        <!-- <button
             onClick="handleCredentialResponse({ credential: 'mock-google-credential' })"
         >
             mock google sign-in
-        </button>
+        </button> -->
 
+        <div id="current-user">Current user: not logged</div>
         <div id="status">Status: 🟢 Ready</div>
         <div>
             <label for="bucket-names">Buckets:</label>
