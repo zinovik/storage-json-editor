@@ -9,7 +9,9 @@
         <script src="https://accounts.google.com/gsi/client" async></script>
         <script>
             const API_URL =
-                'https://storage-json-editor-api-wniawguk3a-uc.a.run.app';
+                window.location.hostname === 'localhost'
+                    ? 'http://localhost:8080'
+                    : 'https://storage-json-editor-api-wniawguk3a-uc.a.run.app';
             const state = {
                 Authorization: null,
                 bucketNames: null,
@@ -35,7 +37,6 @@
                 const response = await fetch(`${API_URL}/auth/login`, {
                     method: 'POST',
                     headers: {
-                        Authorization: state.Authorization,
                         'Content-Type': 'application/json',
                     },
                     body: JSON.stringify({ token }),
@@ -221,6 +222,12 @@
             data-close_on_tap_outside="false"
             data-itp_support="true"
         ></div>
+
+        <button
+            onClick="handleCredentialResponse({ credential: 'mock-google-credential' })"
+        >
+            mock google sign-in
+        </button>
 
         <div id="status">Status: 🟢 Ready</div>
         <div>
