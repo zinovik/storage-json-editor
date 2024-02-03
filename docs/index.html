@@ -250,6 +250,7 @@
                     state.currentUser = profileResponse.email;
                     await loadFile();
                 }
+                setIsLoading(false);
             })();
         </script>
 
@@ -269,7 +270,7 @@
         </button> -->
 
         <div id="current-user">Current user: not logged</div>
-        <div id="status">Status: 🟢 Ready</div>
+        <div id="status">Status: ⏳ Loading...</div>
         <div>
             <label for="bucket-names">Buckets:</label>
         </div>
