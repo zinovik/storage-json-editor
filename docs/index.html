@@ -29,7 +29,6 @@
                 document.getElementById('bucket-names').disabled = isLoading;
                 document.getElementById('file-names').disabled = isLoading;
                 document.getElementById('file').disabled = isLoading;
-                document.getElementById('sort-keys').disabled = isLoading;
                 document.getElementById('save-button').disabled = isLoading;
             };
 
@@ -207,23 +206,6 @@
                 state.file = value;
             };
 
-            const sortKeys = () => {
-                const jsonObject = JSON.parse(state.file);
-
-                const jsonObjectSorted = Object.keys(jsonObject)
-                    .sort((key1, key2) => key1.localeCompare(key2))
-                    .reduce(
-                        (acc, key) => ({
-                            ...acc,
-                            [key]: jsonObject[key],
-                        }),
-                        {}
-                    );
-
-                state.file = stringify(jsonObjectSorted);
-                updateData();
-            };
-
             const saveFile = async () => {
                 document.getElementById('save-button').innerHTML = 'Saving...';
 
@@ -309,7 +291,6 @@
         </div>
 
         <div>
-            <button onClick="sortKeys()" id="sort-keys">Sort Keys</button>
             <button onClick="saveFile()" id="save-button">Save</button>
         </div>
     </body>
