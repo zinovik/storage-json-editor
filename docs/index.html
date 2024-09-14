@@ -50,18 +50,6 @@
                 return await response.json();
             };
 
-            const profileRequest = async () => {
-                const response = await fetch(`${API_URL}/auth/profile`, {
-                    method: 'GET',
-                    credentials: 'include',
-                    headers: {
-                        Authorization: localStorage.getItem('csrf'),
-                    },
-                });
-
-                return await response.json();
-            };
-
             const getFileRequest = async (query) => {
                 const response = await fetch(
                     `${API_URL}/json?${new URLSearchParams(query)}`,
@@ -132,6 +120,7 @@
 
                 if (!getBucketNamesResponse) return;
 
+                state.currentUser = getBucketNamesResponse.user.email;
                 state.bucketNames = getBucketNamesResponse.bucketNames;
                 state.fileNames = getBucketNamesResponse.fileNames;
                 state.file = stringify(getBucketNamesResponse.file);
@@ -144,13 +133,7 @@
             async function handleCredentialResponse(googleUser) {
                 setIsLoading(true);
 
-                const signInResponse = await signInRequest(
-                    googleUser.credential
-                );
-
-                state.currentUser = signInResponse.email;
-                updateData();
-
+                await signInRequest(googleUser.credential);
                 await loadFile();
 
                 setIsLoading(false);
@@ -227,11 +210,7 @@
             };
 
             (async () => {
-                const profileResponse = await profileRequest();
-                if (profileResponse && profileResponse.email) {
-                    state.currentUser = profileResponse.email;
-                    await loadFile();
-                }
+                await loadFile();
                 setIsLoading(false);
             })();
         </script>
