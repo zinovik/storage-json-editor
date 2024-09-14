@@ -118,7 +118,11 @@
             const loadFile = async () => {
                 const getBucketNamesResponse = await getFileRequest();
 
-                if (!getBucketNamesResponse) return;
+                if (
+                    !getBucketNamesResponse ||
+                    getBucketNamesResponse.statusCode >= 400
+                )
+                    return;
 
                 state.currentUser = getBucketNamesResponse.user.email;
                 state.bucketNames = getBucketNamesResponse.bucketNames;
