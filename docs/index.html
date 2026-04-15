@@ -1,4 +1,4 @@
-<!DOCTYPE html>
+<!doctype html>
 
 <html>
     <head>
@@ -106,11 +106,8 @@
                     state.currentFileName
                 );
                 document.getElementById('file').value = state.file ?? '';
-                document.getElementById(
-                    'current-user'
-                ).innerHTML = `Current user: ${
-                    state.currentUser || 'not logged'
-                }`;
+                document.getElementById('current-user').innerHTML =
+                    `Current user: ${state.currentUser || 'not logged'}`;
             };
 
             const stringify = (file) => JSON.stringify(file, null, 4);
@@ -202,7 +199,9 @@
                     await saveFileRequest({
                         bucketName: state.currentBucketName,
                         fileName: state.currentFileName,
-                        file: JSON.parse(state.file),
+                        file: state.currentFileName.endsWith('.json')
+                            ? JSON.parse(state.file)
+                            : state.file,
                     });
                 } catch (error) {
                     alert('error saving json!');
